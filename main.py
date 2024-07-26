@@ -1,7 +1,8 @@
 from dynamixel_utils import *
 
 motors = ['XL430', 'XL430', 'XL430', 'XL430', 'XL330', 'XL330']
-dm = DynaManager(device_name="/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT5NUSV6-if00-port0", connected_motors = motors)
+device_name = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT5NUSV6-if00-port0"
+dm = DynaManager(device_name=device_name, connected_motors = motors)
 
 #loop initialization 
 base_refresh_rate = 100 #Hz

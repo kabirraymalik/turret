@@ -4,10 +4,10 @@ import math as m
 
 class Eye_Bot():
     def __init__(self):
-        self.L1 = 150 #mm
-        self.L1_theta_offset = 30 #degrees
-        self.L2 = 200 #mm
-        self.L2_theta_offset = 10 #degrees, between L1 and L2 like hands on a clock at zero (around 5-10 deg)
+        self.L1 = 215 #mm
+        self.L1_theta_offset = 18 #degrees
+        self.L2 = 180 #mm
+        self.L2_theta_offset = 12 #degrees, between L1 and L2 like hands on a clock at zero (around 5-10 deg)
         self.rest_position = Position(np.pi/2, 0, -20, 0, 0)
 
 

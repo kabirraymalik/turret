@@ -8,7 +8,7 @@ start_time = time.time()
 last_refresh = start_time
 stopped = False
 
-bot.go_home()
+#bot.go_home()
 bot.disable_torque()
 vel1 = bot.dm.get_position_velocity(2)
 vel2 = bot.dm.get_position_velocity(3)
@@ -19,11 +19,11 @@ while not stopped:
     #runtime limit 10s
     if time.time()-start_time>10:
         stopped = True
-        #bot.go_home()
+        bot.set_lift_height(np.pi/5)
     
     if first_time and time.time()-start_time>5:
         first_time = False
-        #bot.go_home()
+        bot.go_home()
         #bot.set_lift_height(np.pi/3)
         #bot.dm.set_position(1, 3*np.pi/4)
         #bot.dm.set_position(4, np.pi/4)

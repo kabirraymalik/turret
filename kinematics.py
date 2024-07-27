@@ -104,8 +104,8 @@ class Eye_Bot():
         self.dm.set_position(motor_ID, val)
 
     def set_lift_height(self, pos_in_radians):
-        self.dm.set_position(2, pos_in_radians)
-        self.dm.set_position(3, pos_in_radians)
+        self.move_motor(2, pos_in_radians)
+        self.move_motor(3, pos_in_radians)
     
     def go_home(self):
         self.disable_torque()
@@ -116,9 +116,8 @@ class Eye_Bot():
         self.dm.set_position_mode(5)
         self.enable_torque()
         self.dm.set_position(1,np.pi)
-        self.dm.set_position(2, 0.2)
-        self.dm.set_position(3, 0.2)
-        self.move_motor(4, 0)
+        self.set_lift_height(np.pi/4)
+        self.move_motor(4, 10)
         self.dm.set_position(5, 0.2)
 
     def active(self):

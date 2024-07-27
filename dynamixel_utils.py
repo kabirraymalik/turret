@@ -173,7 +173,7 @@ class DynaManager():
         
     def set_position(self, motor_ID, position_in_radians):
         if position_in_radians == 0:
-            val = 2
+            val = 1
         else:
             val = int((self.get_motor_info(motor_ID, 'max_position')* position_in_radians/(2 * np.pi)))
         dxl_comm_result, dxl_error = self.packetHandler.write4ByteTxRx(self.portHandler, motor_ID, self.get_motor_info(motor_ID,'set_position'), val)

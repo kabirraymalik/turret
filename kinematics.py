@@ -8,6 +8,10 @@ class Eye_Bot():
         self.motors = ['XL430', 'XL430', 'XL430', 'XL430', 'XL330', 'XL330']
         device_name = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT5NUSV6-if00-port0"
         self.dm = dynamixel_utils.DynaManager(device_name=device_name, connected_motors = self.motors)
+        
+        self.control_mode = ''
+        self.move_queue = []
+        self.current_position = None
 
         self.L1 = 215 #mm
         self.L1_theta_offset = 18 #degrees
@@ -71,6 +75,7 @@ class Eye_Bot():
                 self.dm.set_extended_position_control_mode(motor)
         else:
             print('ERROR: invalid mode selected')
+        self.control_mode = mode
         self.enable_torque()
 
     def shut_down(self):
@@ -96,6 +101,11 @@ class Eye_Bot():
         print(output)
         return output
     
+    def assume_position(self, goal_pos):
+        #TODO: this method in position, 0.05 represents percentage accuracy
+        if self.current_pos.compare_to(goal_pos, 0.05):
+            print('robot already in desired position')
+    
     def move_motor(self, motor_ID, pos_in_radians):
         if motor_ID == 4:
             val = 2*np.pi - pos_in_radians
@@ -108,42 +118,20 @@ class Eye_Bot():
         self.move_motor(3, pos_in_radians)
     
     def go_home(self):
-        self.disable_torque()
-        self.dm.set_position_mode(1)
-        self.dm.set_position_mode(2)
-        self.dm.set_position_mode(3)
-        self.dm.set_position_mode(4)
-        self.dm.set_position_mode(5)
-        self.enable_torque()
+        if self.control_mode != 'position':
+            self.set_mode_all('position')
+        self.dm.set_position(1,np.pi)
+        self.set_lift_height(0)
+        self.move_motor(4, 0.5)
+        self.dm.set_position(5, 0.5)
+
+    def test_pos(self):
+        if self.control_mode != 'position':
+            self.set_mode_all('position')
         self.dm.set_position(1,np.pi)
         self.set_lift_height(np.pi/4)
-        self.move_motor(4, 10)
+        self.move_motor(4, np.pi/5)
         self.dm.set_position(5, 0.2)
-
-    def active(self):
-        self.dm.set_position(1, np.pi*3/2)
-        self.dm.set_position(2, np.pi/3)
-        self.dm.set_position(3, np.pi/3)
-        self.dm.set_position(4, np.pi/2)
-        self.dm.set_position(5, np.pi)
-
-    def test1(self):
-        self.dm.disable_torque(1)
-        self.dm.disable_torque(4)
-        self.dm.disable_torque(5)
-        self.dm.set_position_mode(1)
-        self.dm.set_position_mode(4)
-        self.dm.set_position_mode(5)
-        self.dm.enable_torque(1)
-        self.dm.enable_torque(4)
-        self.dm.enable_torque(5)
-        self.dm.set_position(1, 0.01)
-        self.dm.set_position(4, 0.01)
-        self.dm.set_position(5, 0.01)
-    def test2(self):
-        self.dm.set_position(1, np.pi)
-        self.dm.set_position(4, np.pi)
-        self.dm.set_position(5, np.pi)
 
 
 class Cylindrical_Position():#

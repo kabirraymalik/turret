@@ -182,8 +182,8 @@ class DynaManager():
         elif dxl_error != 0:
             print("%s" % self.packetHandler.getRxPacketError(dxl_error))
     
-    def set_position_velocity(self, motor_ID, velocity):
-        dxl_comm_result, dxl_error = self.packetHandler.write4ByteTxRx(self.portHandler, motor_ID, self.get_motor_info(motor_ID,'set_position_velocity'), int((self.get_motor_info(motor_ID, 'max_position')* position_in_radians/(2 * np.pi))))
+    def set_position_velocity(self, motor_ID, velocity_as_decimal):
+        dxl_comm_result, dxl_error = self.packetHandler.write4ByteTxRx(self.portHandler, motor_ID, self.get_motor_info(motor_ID,'set_position_velocity'), velocity_as_decimal*self.get_motor_info(motor_ID,'set_position_velocity'))
         if dxl_comm_result != COMM_SUCCESS:
             print("%s" % self.packetHandler.getTxRxResult(dxl_comm_result))
         elif dxl_error != 0:

@@ -9,6 +9,7 @@ last_refresh = start_time
 stopped = False
 
 bot.go_home()
+bot.disable_torque()
 vel1 = bot.dm.get_position_velocity(2)
 vel2 = bot.dm.get_position_velocity(3)
 print(f"velocities of motors 2 and 3: {vel1}, {vel2}")

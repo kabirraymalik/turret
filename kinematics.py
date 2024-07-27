@@ -54,11 +54,28 @@ class Eye_Bot():
         if mode == 'fast':
             for motor in range(1, len(self.motors)):
                 self.dm.set_position_velocity(motor, fast)
+    
+    def set_mode_all(self, mode):
+        self.disable_torque()
+        if mode == 'position':
+            for motor in range(1, len(self.motors)):
+                self.dm.set_position_mode(motor)
+        elif mode == 'velocity':
+            for motor in range(1, len(self.motors)):
+                self.dm.set_velocity_mode(motor)
+        elif mode == 'voltage':
+            for motor in range(1, len(self.motors)):
+                self.dm.set_voltage_mode(motor)
+        elif mode == 'extended position control':
+            for motor in range(1, len(self.motors)):
+                self.dm.set_extended_position_control_mode(motor)
+        else:
+            print('ERROR: invalid mode selected')
+        self.enable_torque()
 
     def shut_down(self):
         time.sleep(1)
-        for motor in range(1, len(self.motors)):
-            self.dm.disable_torque(motor)
+        self.disable_torque()
         time.sleep(1)
         self.dm.portHandler.closePort()
         print('robot successfully shut down')
@@ -69,6 +86,7 @@ class Eye_Bot():
             pos = self.dm.get_position(motor)
             output = output + f" motor {motor}: {pos} |"
         print(output)
+        return output
     
     def read_hardware_status(self):
         output = "|"
@@ -76,6 +94,7 @@ class Eye_Bot():
             status = self.dm.read_hardware_status(motor)
             output = output + f" motor {motor}: {status}"
         print(output)
+        return output
     
     def move_motor(self, motor_ID, pos_in_radians):
         if motor_ID == 4:
@@ -83,23 +102,19 @@ class Eye_Bot():
         else:
             val = pos_in_radians
         self.dm.set_position(motor_ID, val)
+
+    def set_lift_height(self, pos_in_radians):
+        self.dm.set_position(2, pos_in_radians)
+        self.dm.set_position(3, pos_in_radians)
     
     def go_home(self):
-        self.dm.disable_torque(1)
-        self.dm.disable_torque(2)
-        self.dm.disable_torque(3)
-        self.dm.disable_torque(4)
-        self.dm.disable_torque(5)
+        self.disable_torque()
         self.dm.set_position_mode(1)
         self.dm.set_position_mode(2)
         self.dm.set_position_mode(3)
         self.dm.set_position_mode(4)
         self.dm.set_position_mode(5)
-        self.dm.enable_torque(1)
-        self.dm.enable_torque(2)
-        self.dm.enable_torque(3)
-        self.dm.enable_torque(4)
-        self.dm.enable_torque(5)
+        self.enable_torque()
         self.dm.set_position(1,np.pi)
         self.dm.set_position(2, 0.2)
         self.dm.set_position(3, 0.2)
@@ -112,16 +127,6 @@ class Eye_Bot():
         self.dm.set_position(3, np.pi/3)
         self.dm.set_position(4, np.pi/2)
         self.dm.set_position(5, np.pi)
-    
-    def set_lift_height(self, pos_in_radians):
-        self.dm.disable_torque(2)
-        self.dm.disable_torque(3)
-        self.dm.set_position_mode(2)
-        self.dm.set_position_mode(3)
-        self.dm.enable_torque(2)
-        self.dm.enable_torque(3)
-        self.dm.set_position(2, pos_in_radians)
-        self.dm.set_position(3, pos_in_radians)
 
     def test1(self):
         self.dm.disable_torque(1)

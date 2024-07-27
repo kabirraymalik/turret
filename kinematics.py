@@ -1,9 +1,14 @@
 import numpy as np
-import sypy
 import math as m
+import dynamixel_utils
+import time
 
 class Eye_Bot():
     def __init__(self):
+        self.motors = ['XL430', 'XL430', 'XL430', 'XL430', 'XL330', 'XL330']
+        device_name = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT5NUSV6-if00-port0"
+        self.dm = dynamixel_utils.DynaManager(device_name=device_name, connected_motors = self.motors)
+
         self.L1 = 215 #mm
         self.L1_theta_offset = 18 #degrees
         self.L2 = 180 #mm
@@ -25,6 +30,116 @@ class Eye_Bot():
         )
         pos = Cylindrical_Position(theta_1, endpoint(1), endpoint(2))
         return pos
+    
+    
+    def enable_torque(self):
+        for motor in range(1, len(self.motors)):
+            self.dm.enable_torque(motor)
+
+    def disable_torque(self):
+        for motor in range(1, len(self.motors)):
+            self.dm.disable_torque(motor)
+
+    def set_speed_all(self, mode):
+        slow = 100
+        medium = 150
+        fast = 200
+
+        if mode == 'slow':
+            for motor in range(1, len(self.motors)):
+                self.dm.set_position_velocity(motor, slow)
+        if mode == 'medium':
+            for motor in range(1, len(self.motors)):
+                self.dm.set_position_velocity(motor, medium)
+        if mode == 'fast':
+            for motor in range(1, len(self.motors)):
+                self.dm.set_position_velocity(motor, fast)
+
+    def shut_down(self):
+        time.sleep(1)
+        for motor in range(1, len(self.motors)):
+            self.dm.disable_torque(motor)
+        time.sleep(1)
+        self.dm.portHandler.closePort()
+        print('robot successfully shut down')
+    
+    def read_motor_positions(self):
+        output = "|"
+        for motor in range(1,len(self.motors)):
+            pos = self.dm.get_position(motor)
+            output = output + f" motor {motor}: {pos} |"
+        print(output)
+    
+    def read_hardware_status(self):
+        output = "|"
+        for motor in range(1,len(self.motors)):
+            status = self.dm.read_hardware_status(motor)
+            output = output + f" motor {motor}: {status}"
+        print(output)
+    
+    def move_motor(self, motor_ID, pos_in_radians):
+        if motor_ID == 4:
+            val = 2*np.pi - pos_in_radians
+        else:
+            val = pos_in_radians
+        self.dm.set_position(motor_ID, val)
+    
+    def go_home(self):
+        self.dm.disable_torque(1)
+        self.dm.disable_torque(2)
+        self.dm.disable_torque(3)
+        self.dm.disable_torque(4)
+        self.dm.disable_torque(5)
+        self.dm.set_position_mode(1)
+        self.dm.set_position_mode(2)
+        self.dm.set_position_mode(3)
+        self.dm.set_position_mode(4)
+        self.dm.set_position_mode(5)
+        self.dm.enable_torque(1)
+        self.dm.enable_torque(2)
+        self.dm.enable_torque(3)
+        self.dm.enable_torque(4)
+        self.dm.enable_torque(5)
+        self.dm.set_position(1,np.pi)
+        self.dm.set_position(2, 0.2)
+        self.dm.set_position(3, 0.2)
+        self.move_motor(4, 0)
+        self.dm.set_position(5, 0.2)
+
+    def active(self):
+        self.dm.set_position(1, np.pi*3/2)
+        self.dm.set_position(2, np.pi/3)
+        self.dm.set_position(3, np.pi/3)
+        self.dm.set_position(4, np.pi/2)
+        self.dm.set_position(5, np.pi)
+    
+    def set_lift_height(self, pos_in_radians):
+        self.dm.disable_torque(2)
+        self.dm.disable_torque(3)
+        self.dm.set_position_mode(2)
+        self.dm.set_position_mode(3)
+        self.dm.enable_torque(2)
+        self.dm.enable_torque(3)
+        self.dm.set_position(2, pos_in_radians)
+        self.dm.set_position(3, pos_in_radians)
+
+    def test1(self):
+        self.dm.disable_torque(1)
+        self.dm.disable_torque(4)
+        self.dm.disable_torque(5)
+        self.dm.set_position_mode(1)
+        self.dm.set_position_mode(4)
+        self.dm.set_position_mode(5)
+        self.dm.enable_torque(1)
+        self.dm.enable_torque(4)
+        self.dm.enable_torque(5)
+        self.dm.set_position(1, 0.01)
+        self.dm.set_position(4, 0.01)
+        self.dm.set_position(5, 0.01)
+    def test2(self):
+        self.dm.set_position(1, np.pi)
+        self.dm.set_position(4, np.pi)
+        self.dm.set_position(5, np.pi)
 
 
 class Cylindrical_Position():#

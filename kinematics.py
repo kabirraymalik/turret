@@ -85,6 +85,13 @@ class Eye_Bot():
         self.dm.portHandler.closePort()
         print('robot successfully shut down')
     
+    def get_pid_info(self, motor_ID):
+        p = self.dm.get_position_P(1)
+        i = self.dm.get_position_I(1)
+        d = self.dm.get_position_D(1)
+        print(f'motor {motor_ID} info: | P: {p} | I: {i} | D: {d} |')
+        return [p,i,d]
+    
     def read_motor_positions(self):
         output = "|"
         for motor in range(1,len(self.motors)):

@@ -11,7 +11,11 @@ stopped = False
 bot.go_home()
 vel1 = bot.dm.get_position_velocity(2)
 vel2 = bot.dm.get_position_velocity(3)
-print(f"velocities of motors 2 and 3: {vel1}, {vel2}")
+print(f"position velocities of motors 2 and 3: {vel1}, {vel2}")
+bot.get_pid_info(1)
+bot.get_pid_info(2)
+bot.get_pid_info(3)
+
 first_time = True
 
 while not stopped:

@@ -95,8 +95,16 @@ class Eye_Bot():
     def read_motor_positions(self):
         output = "|"
         for motor in range(1,len(self.motors)):
-            pos = self.dm.get_position(motor)
+            pos = self.dm.get_position(momax_positiontor)
             output = output + f" motor {motor}: {pos} |"
+        print(output)
+        return output
+    
+    def read_motor_positions_rad(self):
+        output = "|"
+        for motor in range(1,len(self.motors)):
+            pos = (self.dm.get_position(motor)/self.dm.get_motor_info(motor, 'max_position'))*2
+            output = output + f" motor {motor}: {pos} pi rad |"
         print(output)
         return output
     
@@ -128,17 +136,14 @@ class Eye_Bot():
         if self.control_mode != 'position':
             self.set_mode_all('position')
         self.dm.set_position(1,np.pi)
-        self.set_lift_height(0)
-        self.move_motor(4, 0.5)
+        self.set_lift_height(15*np.pi/180)
+        self.move_motor(4, 15*np.pi/180)
         self.dm.set_position(5, 0.5)
 
     def test_pos(self):
         if self.control_mode != 'position':
             self.set_mode_all('position')
-        self.dm.set_position(1,np.pi)
-        self.set_lift_height(np.pi/4)
-        self.move_motor(4, np.pi/5)
-        self.dm.set_position(5, 0.2)
+        self.dm.set_position(1,np.pi/2)
 
 
 class Cylindrical_Position():#

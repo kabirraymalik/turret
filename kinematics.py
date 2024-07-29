@@ -95,7 +95,7 @@ class Eye_Bot():
     def read_motor_positions(self):
         output = "|"
         for motor in range(1,len(self.motors)):
-            pos = self.dm.get_position(momax_positiontor)
+            pos = self.dm.get_position(motor)
             output = output + f" motor {motor}: {pos} |"
         print(output)
         return output

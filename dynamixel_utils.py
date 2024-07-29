@@ -286,3 +286,36 @@ class DynaManager():
             print("%s" % self.packetHandler.getRxPacketError(dxl_error))
         else:
             return dxl_present_current
+        
+        #================== helpful other functions
+
+    def read_hardware_status(self):
+        output = "|"
+        for motor in range(1,len(self.motors)):
+            status = self.read_hardware_status(motor)
+            output = output + f" motor {motor}: {status}"
+        print(output)
+        return output
+    
+    def read_motor_positions(self):
+        output = "|"
+        for motor in range(1,len(self.motors)):
+            pos = self.get_position(motor)
+            output = output + f" motor {motor}: {pos} |"
+        print(output)
+        return output
+
+    def read_motor_positions_rad(self):
+            output = "|"
+            for motor in range(1,len(self.motors)):
+                pos = (self.get_position(motor)/4095)*2*np.pi
+                output = output + f" motor {motor}: {pos} rad |"
+            print(output)
+            return output
+    
+    def log_motor_positions(self):
+        out = []
+        for motor in range(1, len(self.motors)):
+            pos = (self.get_position(motor)/4095)*2*np.pi
+            out.append(pos)
+        return out

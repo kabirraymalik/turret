@@ -41,7 +41,7 @@ while not stopped:
         #bot.dm.set_position(1, 3*np.pi/4)
         #bot.dm.set_position(4, np.pi/4)
 
-    bot.read_motor_positions_rad()
+    bot.update_curr_position()
     #time control 
     while (time.time()) < (last_refresh + 1.0/base_refresh_rate):
         time.sleep(0.00001)

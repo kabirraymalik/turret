@@ -1,23 +1,30 @@
 import numpy as np
 import math as m
-import dynamixel_utils
+import dynamixel_utils_new
 import time
 
 class Eye_Bot():
     def __init__(self):
         self.motors = ['XL430', 'XL430', 'XL430', 'XL430', 'XL330', 'XL330']
         device_name = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT5NUSV6-if00-port0"
-        self.dm = dynamixel_utils.DynaManager(device_name=device_name, connected_motors = self.motors)
+        self.dm = dynamixel_utils_new.DynaManager(device_name=device_name, connected_motors = self.motors)
         
         self.control_mode = ''
+        self.torque_enabled = ''
+
         self.move_queue = []
-        self.current_position = None
+        #logs current position
+        self.update_curr_position()
+        #position accuracy for comparing positions
+        self.position_acc = 0.05 #up to 5% off position still ok 
 
         self.L1 = 215 #mm
         self.L1_theta_offset = 18 #degrees
         self.L2 = 180 #mm
         self.L2_theta_offset = 12 #degrees, between L1 and L2 like hands on a clock at zero (around 5-10 deg)
-        self.rest_position = Cylindrical_Position(np.pi/2, 0, -20, 0, 0)
+        self.rest_position = Position(np.pi/2, 0, -20, 0, 0)
+
+        self.prev_out = time.time()
 
     def inverse_cylindrical(self, position):
         #TODO:
@@ -32,17 +39,19 @@ class Eye_Bot():
             elbow_pos(1) - m.cos(normalized_theta_4) * self.L2,
             elbow_pos(2)  + m.sin(normalized_theta_4) * self.L2
         )
-        pos = Cylindrical_Position(theta_1, endpoint(1), endpoint(2))
+        pos = Position(theta_1, endpoint(1), endpoint(2))
         return pos
     
     
     def enable_torque(self):
         for motor in range(1, len(self.motors)):
             self.dm.enable_torque(motor)
+        self.torque_enabled = True
 
     def disable_torque(self):
         for motor in range(1, len(self.motors)):
             self.dm.disable_torque(motor)
+        self.torque_enabled = False
 
     def set_speed_all(self, mode):
         slow = 100
@@ -117,6 +126,16 @@ class Eye_Bot():
         return output
     
     def assume_position(self, goal_pos):
+        if self.control_mode != 'position':
+            self.set_mode_all('position')
+        if not self.torque_enabled:
+            self.torque_enable()
+        self.move_motor(1, goal_pos.theta1)
+        self.set_lift_height(goal_pos.lift_theta)
+        self.move_motor(4, goal_pos.theta3)
+        self.move_motor(5, goal_pos.wrist)
+        self.move_motor(6, goal_pos.tilt)
+
         #TODO: this method in position, 0.05 represents percentage accuracy
         if self.current_pos.compare_to(goal_pos, 0.05):
             print('robot already in desired position')
@@ -144,9 +163,25 @@ class Eye_Bot():
         if self.control_mode != 'position':
             self.set_mode_all('position')
         self.dm.set_position(1,np.pi/2)
+    
+    def update_curr_position(self):
+        self.current_position = Position(self.dm.log_positions_rad())
+    
+    def print_robot_info(self):
+        angles = self.current_positon.motor_positions
+        theta1 = angles[0]
+        lift_theta = angles[1]
+        theta3 = angles[2]
+        wrist = angles[3]
+        tilt = angles[4]
+        t = time.time()
+        fps = 1/(t - self.prev_out)
+        self.prev_out = t
+        print(f'|fps: {fps}| theta: {theta1}| lift: {lift_theta}| theta3 = {theta3}| wrist: {wrist}| tilt: {tilt}|')
 
 
-class Cylindrical_Position():#
+
+class Position():
     def __init__(self, theta, x, y):
         self.theta = theta
         self.x = x
@@ -167,6 +202,18 @@ class Cylindrical_Position():#
         self.y = y
         self.wrist = wrist
         self.tilt = tilt
+        
+    #only one being used rn
+    def __init__(self, motors):
+        self.theta1 = motors[0]
+        self.lift_theta = motors[1]
+        self.theta3 = motors[3]
+        self.wrist = motors[5]
+        self.tilt = motors[6]
+        self.x = None
+        self.y = None
+        self.motor_positions = [self.theta1, self.lift_theta, self.theta3, self.wrist, self.tilt]
+
     
     def update_solution(self, theta_1, theta_2, theta_3, theta_4):
         self.motor1 = theta_1

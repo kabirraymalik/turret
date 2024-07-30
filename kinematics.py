@@ -1,18 +1,23 @@
 import numpy as np
 import math as m
-import dynamixel_utils_new
+import dynamixel_utils
 import time
+import os
 
 class Eye_Bot():
     def __init__(self):
         self.motors = ['XL430', 'XL430', 'XL430', 'XL430', 'XL330', 'XL330']
-        device_name = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT5NUSV6-if00-port0"
-        self.dm = dynamixel_utils_new.DynaManager(device_name=device_name, connected_motors = self.motors)
+        if os.path.exists('/dev/serial/by-id'):
+            device_name = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT5NUSV6-if00-port0"
+        else:
+            device_name = "/dev/tty.usbserial-FT5NUSV6"
+        self.dm = dynamixel_utils.DynaManager(device_name=device_name, connected_motors = self.motors)
         
         self.control_mode = ''
         self.torque_enabled = ''
 
         self.move_queue = []
+        self.generate_stored_positions()
         #logs current position
         self.update_curr_position()
         #position accuracy for comparing positions
@@ -22,9 +27,26 @@ class Eye_Bot():
         self.L1_theta_offset = 18 #degrees
         self.L2 = 180 #mm
         self.L2_theta_offset = 12 #degrees, between L1 and L2 like hands on a clock at zero (around 5-10 deg)
-        self.rest_position = Position(np.pi/2, 0, -20, 0, 0)
+        self.lift_sync_offset = (6/4095) * 2 * np.pi #difference in angle of lift motors in radians
 
         self.prev_out = time.time()
+    
+    def safety(self):
+        if self.current_position.theta3 > 5*np.pi/6:
+            print("SAFETY BOUND REACHED: TORQUE OFF")
+            self.disable_torque()
+
+    def generate_stored_positions(self):
+        positions = []
+        pos = Position([2.155815865848822, 0.4152765099338252, 1.320012388119247, 2.214074822529949, 4*np.pi/3])
+        positions.append(pos)
+        pos = Position([3.0825199712146003, 0.4955967897970711, 0.0444963062046906, 3.7023995473075315, 2.3552355180758644])
+        positions.append(pos)
+        pos = Position([3.1070696573964987, 1.0203463319351465, 0.34369560654657566, 3.9371559214219336, 2.3552355180758644])
+        positions.append(pos)
+        pos = Position([4, 0.4152765099338252, 1.320012388119247, 2.214074822529949, 3 * np.pi /4])
+        positions.append(pos)
+        self.stored_positions = positions
 
     def inverse_cylindrical(self, position):
         #TODO:
@@ -44,12 +66,12 @@ class Eye_Bot():
     
     
     def enable_torque(self):
-        for motor in range(1, len(self.motors)):
+        for motor in range(1, len(self.motors)+1):
             self.dm.enable_torque(motor)
         self.torque_enabled = True
 
     def disable_torque(self):
-        for motor in range(1, len(self.motors)):
+        for motor in range(1, len(self.motors)+1):
             self.dm.disable_torque(motor)
         self.torque_enabled = False
 
@@ -59,28 +81,28 @@ class Eye_Bot():
         fast = 200
 
         if mode == 'slow':
-            for motor in range(1, len(self.motors)):
+            for motor in range(1, len(self.motors)+1):
                 self.dm.set_position_velocity(motor, slow)
         if mode == 'medium':
-            for motor in range(1, len(self.motors)):
+            for motor in range(1, len(self.motors)+1):
                 self.dm.set_position_velocity(motor, medium)
         if mode == 'fast':
-            for motor in range(1, len(self.motors)):
+            for motor in range(1, len(self.motors)+1):
                 self.dm.set_position_velocity(motor, fast)
     
     def set_mode_all(self, mode):
         self.disable_torque()
         if mode == 'position':
-            for motor in range(1, len(self.motors)):
+            for motor in range(1, len(self.motors)+1):
                 self.dm.set_position_mode(motor)
         elif mode == 'velocity':
-            for motor in range(1, len(self.motors)):
+            for motor in range(1, len(self.motors)+1):
                 self.dm.set_velocity_mode(motor)
         elif mode == 'voltage':
-            for motor in range(1, len(self.motors)):
+            for motor in range(1, len(self.motors)+1):
                 self.dm.set_voltage_mode(motor)
         elif mode == 'extended position control':
-            for motor in range(1, len(self.motors)):
+            for motor in range(1, len(self.motors)+1):
                 self.dm.set_extended_position_control_mode(motor)
         else:
             print('ERROR: invalid mode selected')
@@ -137,27 +159,30 @@ class Eye_Bot():
         self.move_motor(6, goal_pos.tilt)
 
         #TODO: this method in position, 0.05 represents percentage accuracy
-        if self.current_pos.compare_to(goal_pos, 0.05):
+        if self.current_position.compare_to(goal_pos, 0.05):
             print('robot already in desired position')
     
     def move_motor(self, motor_ID, pos_in_radians):
         if motor_ID == 4:
+            val = 2*np.pi - pos_in_radians
+        elif motor_ID == 5:
             val = 2*np.pi - pos_in_radians
         else:
             val = pos_in_radians
         self.dm.set_position(motor_ID, val)
 
     def set_lift_height(self, pos_in_radians):
-        self.move_motor(2, pos_in_radians)
+        self.move_motor(2, pos_in_radians + self.lift_sync_offset)
         self.move_motor(3, pos_in_radians)
     
     def go_home(self):
         if self.control_mode != 'position':
             self.set_mode_all('position')
         self.dm.set_position(1,np.pi)
-        self.set_lift_height(15*np.pi/180)
-        self.move_motor(4, 15*np.pi/180)
-        self.dm.set_position(5, 0.5)
+        self.set_lift_height(5*np.pi/180)
+        self.move_motor(4, 5*np.pi/180)
+        self.move_motor(5, np.pi)
+        self.move_motor(6, 0)
 
     def test_pos(self):
         if self.control_mode != 'position':
@@ -165,10 +190,11 @@ class Eye_Bot():
         self.dm.set_position(1,np.pi/2)
     
     def update_curr_position(self):
-        self.current_position = Position(self.dm.log_positions_rad())
+        self.current_position = Position(self.dm.log_motor_positions())
     
     def print_robot_info(self):
-        angles = self.current_positon.motor_positions
+        angles = self.current_position.motor_positions
+
         theta1 = angles[0]
         lift_theta = angles[1]
         theta3 = angles[2]
@@ -177,48 +203,43 @@ class Eye_Bot():
         t = time.time()
         fps = 1/(t - self.prev_out)
         self.prev_out = t
-        print(f'|fps: {fps}| theta: {theta1}| lift: {lift_theta}| theta3 = {theta3}| wrist: {wrist}| tilt: {tilt}|')
-
+        #print(f'|fps: {fps}| theta: {theta1}| lift: {lift_theta}| theta3 = {theta3}| wrist: {wrist}| tilt: {tilt}|')
+        print([theta1, lift_theta, theta3, wrist, tilt])
 
 
 class Position():
-    def __init__(self, theta, x, y):
-        self.theta = theta
-        self.x = x
-        self.y = y
-        self.wrist = 'none'
-        self.tilt = 'none'
-    
-    def __init__(self, theta, x, y, wrist):
-        self.theta = theta
-        self.x = x
-        self.y = y
-        self.wrist = wrist
-        self.tilt = 'none'
-
-    def __init__(self, theta, x, y, wrist, tilt):
-        self.theta = theta
-        self.x = x
-        self.y = y
-        self.wrist = wrist
-        self.tilt = tilt
-        
-    #only one being used rn
+     #only one being used rn
     def __init__(self, motors):
-        self.theta1 = motors[0]
-        self.lift_theta = motors[1]
-        self.theta3 = motors[3]
-        self.wrist = motors[5]
-        self.tilt = motors[6]
-        self.x = None
-        self.y = None
+        if len(motors) == 6:
+            self.theta1 = motors[0]
+            self.lift_theta = motors[1]
+            self.theta3 = motors[3]
+            self.wrist = motors[4]
+            self.tilt = motors[5]
+            self.x = None
+            self.y = None
+        elif len(motors) == 5:
+            self.theta1 = motors[0]
+            self.lift_theta = motors[1]
+            self.theta3 = motors[2]
+            self.wrist = motors[3]
+            self.tilt = motors[4]
+            self.x = None
+            self.y = None
+        else:
+            print('invalid position class initialization')
+            return
         self.motor_positions = [self.theta1, self.lift_theta, self.theta3, self.wrist, self.tilt]
-
     
-    def update_solution(self, theta_1, theta_2, theta_3, theta_4):
-        self.motor1 = theta_1
-        self.motor2 = theta_2
-        self.motor3 = theta_3
-        self.motor4 = theta_4
+    def compare_to(self, other_position, accuracy):
+        theta1 = abs(self.motor_positions[0] - other_position.motor_positions[0])/self.motor_positions[0]
+        lift_theta = abs(self.motor_positions[0] - other_position.motor_positions[0])/self.motor_positions[0]
+        theta3 = abs(self.motor_positions[0] - other_position.motor_positions[0])/self.motor_positions[0]
+        wrist = abs(self.motor_positions[0] - other_position.motor_positions[0])/self.motor_positions[0]
+        tilt = abs(self.motor_positions[0] - other_position.motor_positions[0])/self.motor_positions[0]
+        avg_percentage_deviation = (theta1 + lift_theta + theta3 + wrist + tilt)/5
+        if avg_percentage_deviation < accuracy:
+            return True
+        return False
 
 

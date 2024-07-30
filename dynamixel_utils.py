@@ -291,7 +291,7 @@ class DynaManager():
 
     def read_hardware_status(self):
         output = "|"
-        for motor in range(1,len(self.motors)):
+        for motor in range(1,len(self.motors)+1):
             status = self.read_hardware_status(motor)
             output = output + f" motor {motor}: {status}"
         print(output)
@@ -299,7 +299,7 @@ class DynaManager():
     
     def read_motor_positions(self):
         output = "|"
-        for motor in range(1,len(self.motors)):
+        for motor in range(1,len(self.motors)+1):
             pos = self.get_position(motor)
             output = output + f" motor {motor}: {pos} |"
         print(output)
@@ -307,7 +307,7 @@ class DynaManager():
 
     def read_motor_positions_rad(self):
             output = "|"
-            for motor in range(1,len(self.motors)):
+            for motor in range(1,len(self.motors)+1):
                 pos = (self.get_position(motor)/4095)*2*np.pi
                 output = output + f" motor {motor}: {pos} rad |"
             print(output)
@@ -315,7 +315,16 @@ class DynaManager():
     
     def log_motor_positions(self):
         out = []
-        for motor in range(1, len(self.motors)):
-            pos = (self.get_position(motor)/4095)*2*np.pi
+        for motor in range(1, len(self.motors)+1):
+            if motor == 1:
+                pos = ((self.get_position(motor)/4095)*2*np.pi) - 2 * np.pi
+            if motor == 4:
+                pos = ((4095-self.get_position(motor))/4095) * 2 * np.pi
+            elif motor == 5:
+
+                pos_in_radians = (self.get_position(motor)/4095) * 2 * np.pi
+                pos = 2 * np.pi - pos_in_radians
+            else:
+                pos = (self.get_position(motor)/4095)*2*np.pi
             out.append(pos)
         return out

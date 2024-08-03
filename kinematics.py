@@ -44,9 +44,12 @@ class Eye_Bot():
         positions.append(pos)
         pos = Position([3.1070696573964987, 1.0203463319351465, 0.34369560654657566, 3.9371559214219336, 2.3552355180758644])
         positions.append(pos)
+        pos = Position([3.0825199712146003, 0.4955967897970711, 0.0444963062046906, 3.7023995473075315, 2.3552355180758644])
+        positions.append(pos)
         pos = Position([4, 0.4152765099338252, 1.320012388119247, 2.214074822529949, 3 * np.pi /4])
         positions.append(pos)
         self.stored_positions = positions
+        self.move_queue = positions
 
     def inverse_cylindrical(self, position):
         #TODO:

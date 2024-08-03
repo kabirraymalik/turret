@@ -18,16 +18,16 @@ bot.print_robot_info()
 bot.get_pid_info(1)
 bot.get_pid_info(2)
 bot.get_pid_info(3)
-bot.dm.set_position_P(1, 300)
-bot.dm.set_position_P(2, 300)
-bot.dm.set_position_P(3, 300)
-bot.dm.set_position_P(4, 300)
+bot.dm.set_position_P(1, 250)
+bot.dm.set_position_P(2, 250)
+bot.dm.set_position_P(3, 250)
+bot.dm.set_position_P(4, 150)
 bot.dm.set_position_P(5, 500)
 bot.dm.set_position_P(6, 400)
-bot.dm.set_position_D(1, 3000)
-bot.dm.set_position_D(2, 3000)
-bot.dm.set_position_D(3, 3000)
-bot.dm.set_position_D(4, 3000)
+bot.dm.set_position_D(1, 2500)
+bot.dm.set_position_D(2, 2500)
+bot.dm.set_position_D(3, 2500)
+bot.dm.set_position_D(4, 1500)
 bot.dm.set_position_D(5, 3200)
 bot.dm.set_position_D(6, 3100)
 
@@ -48,20 +48,9 @@ while not stopped:
         #bot.go_home()
 
     if testing:
-        if first_time and time.time()-start_time>5:
-            first_time = False
-            bot.assume_position(bot.stored_positions[0])
-        if second_time and time.time()-start_time>6:
-            second_time = False
-            bot.assume_position(bot.stored_positions[1])    
-        if third_time and time.time()-start_time>7:
-            third_time = False
-            bot.assume_position(bot.stored_positions[2])    
-        if fourth_time and time.time()-start_time > 8:
-            fourth_time = False
-            bot.assume_position(bot.stored_positions[3])    
-    
-    
+        if bot.current_position.compare_to(bot.move_queue[0], 0.05):
+            bot.move_queue.pop(0)
+            bot.assume_position(bot.move_queue[0])
     
     bot.update_curr_position()
     bot.print_robot_info()

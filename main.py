@@ -33,22 +33,20 @@ bot.dm.set_position_D(6, 3100)
 
 bot.go_home()
 
-#TODO: PID Tuning for various modes of movement, also position velocity control 
+#TODO: velocity control for lift motors? 
 
-first_time = True
-second_time = True
-third_time = True
-fourth_time = True
 testing = True
 
 while not stopped:
-    #runtime limit 10s
+    #runtime limit 15s
     if time.time()-start_time>15:
         stopped = True
         #bot.go_home()
 
     if testing:
-        if bot.current_position.compare_to(bot.move_queue[0], 0.05):
+        #if current position = goal position
+        if bot.current_position.compare_to(bot.move_queue[0], 0.1):
+            #remove first item and assume next position
             bot.move_queue.pop(0)
             bot.assume_position(bot.move_queue[0])
     

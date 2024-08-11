@@ -11,7 +11,7 @@ class Eye_Bot():
             device_name = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT5NUSV6-if00-port0"
         else:
             device_name = "/dev/tty.usbserial-FT5NUSV6"
-        self.dm = dynamixel_utils.DynaManager(device_name=device_name, connected_motors = self.motors)
+        self.dm = dynamixel_utils.DynaManager(device_name=device_name, connected_motors=self.motors)
         
         self.control_mode = ''
         self.torque_enabled = ''
@@ -166,9 +166,7 @@ class Eye_Bot():
             print('robot already in desired position')
     
     def move_motor(self, motor_ID, pos_in_radians):
-        if motor_ID == 4:
-            val = 2*np.pi - pos_in_radians
-        elif motor_ID == 5:
+        if motor_ID == 4 or motor_ID == 5:
             val = 2*np.pi - pos_in_radians
         else:
             val = pos_in_radians
@@ -236,10 +234,10 @@ class Position():
     
     def compare_to(self, other_position, accuracy):
         theta1 = abs(self.motor_positions[0] - other_position.motor_positions[0])/self.motor_positions[0]
-        lift_theta = abs(self.motor_positions[0] - other_position.motor_positions[0])/self.motor_positions[0]
-        theta3 = abs(self.motor_positions[0] - other_position.motor_positions[0])/self.motor_positions[0]
-        wrist = abs(self.motor_positions[0] - other_position.motor_positions[0])/self.motor_positions[0]
-        tilt = abs(self.motor_positions[0] - other_position.motor_positions[0])/self.motor_positions[0]
+        lift_theta = abs(self.motor_positions[1] - other_position.motor_positions[1])/self.motor_positions[1]
+        theta3 = abs(self.motor_positions[2] - other_position.motor_positions[2])/self.motor_positions[2]
+        wrist = abs(self.motor_positions[3] - other_position.motor_positions[3])/self.motor_positions[3]
+        tilt = abs(self.motor_positions[4] - other_position.motor_positions[4])/self.motor_positions[4]
         avg_percentage_deviation = (theta1 + lift_theta + theta3 + wrist + tilt)/5
         if avg_percentage_deviation < accuracy:
             return True

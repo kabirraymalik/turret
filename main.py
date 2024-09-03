@@ -31,24 +31,26 @@ bot.dm.set_position_D(4, 1500)
 bot.dm.set_position_D(5, 3200)
 bot.dm.set_position_D(6, 3100)
 
-bot.go_home()
-
 #TODO: velocity control for lift motors? 
+
+bot.assume_position(bot.move_queue[0])
 
 testing = True
 
 while not stopped:
     #runtime limit 15s
-    if time.time()-start_time>15:
+    if time.time()-start_time>30:
         stopped = True
-        #bot.go_home()
 
     if testing:
-        #if current position = goal position
-        if bot.current_position.compare_to(bot.move_queue[0], 0.1):
-            #remove first item and assume next position
-            bot.move_queue.pop(0)
-            bot.assume_position(bot.move_queue[0])
+        if len(bot.move_queue):
+            #if current position = goal position
+            if bot.current_position.compare_to(bot.move_queue[0], 0.1):
+                #remove first item and assume next position
+                bot.move_queue.pop(0)
+                bot.assume_position(bot.move_queue[0])
+        else:
+            bot.go_home()
     
     bot.update_curr_position()
     bot.print_robot_info()

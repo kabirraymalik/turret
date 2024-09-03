@@ -38,6 +38,8 @@ class Eye_Bot():
 
     def generate_stored_positions(self):
         positions = []
+        home_pos = Position([3.1346880543511344, 0.5232151867517066, 0.2930618787964105, 3.42161251160207, 4.1887902047863905])
+        positions.append(home_pos)
         pos = Position([2.155815865848822, 0.4152765099338252, 1.320012388119247, 2.214074822529949, 4*np.pi/3])
         positions.append(pos)
         pos = Position([3.0825199712146003, 0.4955967897970711, 0.0444963062046906, 3.7023995473075315, 2.3552355180758644])
@@ -177,13 +179,8 @@ class Eye_Bot():
         self.move_motor(3, pos_in_radians)
     
     def go_home(self):
-        if self.control_mode != 'position':
-            self.set_mode_all('position')
-        self.dm.set_position(1,np.pi)
-        self.set_lift_height(5*np.pi/180)
-        self.move_motor(4, 5*np.pi/180)
-        self.move_motor(5, np.pi)
-        self.move_motor(6, 0)
+        home_pos = Position([3.145428542055715, 6.706667393817331, 0.3390925403874698, 3.285054882215261, 4.1887902047863905])
+        self.assume_position(home_pos)
 
     def test_pos(self):
         if self.control_mode != 'position':
